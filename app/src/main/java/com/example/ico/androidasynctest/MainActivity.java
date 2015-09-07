@@ -11,9 +11,13 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.*;
 
 import org.apache.http.Header;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.List;
 
 public class MainActivity extends ActionBarActivity {
     private AsyncHttpClient client;
@@ -24,6 +28,27 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         client = new AsyncHttpClient();
+        PersistentCookieStore myCookieStore = new PersistentCookieStore(getApplicationContext());
+        List<Cookie> cookies = myCookieStore.getCookies();
+
+        if(cookies.isEmpty()){
+            // 쿠키값이 존재하지 않는경우 추가하는 로직
+            // 이 부분은 server success 이후로 추가하는 편이 나을듯!!
+            Toast.makeText(getApplicationContext(),"no cookies",Toast.LENGTH_SHORT).show();
+
+            client.setCookieStore(myCookieStore);
+            BasicClientCookie newCookie = new BasicClientCookie("cookiesare", "awesome");
+            newCookie.setVersion(1);
+            newCookie.setDomain("mydomain.com");
+            newCookie.setPath("/");
+            myCookieStore.addCookie(newCookie);
+
+        }else{
+            // 쿠키 값이 있는 경우 해당 쿠키값 받아오는 거 ㅎㅎ
+            Toast.makeText(getApplicationContext(),"HAS cookies // " + cookies.get(0).getName() + " - " + cookies.get(0).getValue(),Toast.LENGTH_SHORT).show();
+
+        }
+
         client.get("http://namjungnaedle123.cafe24.com:3000/app/menu", new AsyncHttpResponseHandler() {
 
             @Override
@@ -38,6 +63,8 @@ public class MainActivity extends ActionBarActivity {
                 try {
                     JSONObject object = new JSONObject(resStr);
                     Toast.makeText(getApplicationContext(),object.getString("status"),Toast.LENGTH_SHORT).show();
+
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
